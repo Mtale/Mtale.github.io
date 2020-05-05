@@ -2,7 +2,7 @@
 <html>
 <head><meta charset="utf-8" />
 
-<title>Week5 - ADS Capstone Report</title>
+<title>ADS Capstone Report</title>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.1.10/require.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
@@ -13156,213 +13156,20 @@ div#notebook {
 </div>
 </div>
 <div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[1]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="kn">import</span> <span class="nn">folium</span>
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
-<span class="kn">import</span> <span class="nn">seaborn</span> <span class="k">as</span> <span class="nn">sns</span>
-
-<span class="kn">from</span> <span class="nn">geopy.geocoders</span> <span class="kn">import</span> <span class="n">Nominatim</span>
-<span class="kn">from</span> <span class="nn">matplotlib</span> <span class="kn">import</span> <span class="n">pyplot</span> <span class="k">as</span> <span class="n">plt</span>
-<span class="kn">from</span> <span class="nn">scipy</span> <span class="kn">import</span> <span class="n">stats</span>
-<span class="kn">from</span> <span class="nn">sklearn.linear_model</span> <span class="kn">import</span> <span class="n">LinearRegression</span>
-<span class="kn">from</span> <span class="nn">sklearn.pipeline</span> <span class="kn">import</span> <span class="n">Pipeline</span>
-<span class="kn">from</span> <span class="nn">sklearn.preprocessing</span> <span class="kn">import</span> <span class="n">MinMaxScaler</span>
-
-<span class="c1"># Custom modules</span>
-<span class="c1"># We will use top_20_cities dictionary from here</span>
-<span class="kn">from</span> <span class="nn">openstreetmap</span> <span class="kn">import</span> <span class="n">openstreetmap</span> <span class="k">as</span> <span class="n">osm</span> 
-</pre></div>
-
-    </div>
-</div>
-</div>
 
 </div>
 <div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[2]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="c1"># Read the data and sort it by total population</span>
-<span class="n">data</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="s1">&#39;tidy_data.csv&#39;</span><span class="p">,</span> <span class="n">sep</span><span class="o">=</span><span class="s1">&#39;;&#39;</span><span class="p">)</span>
-<span class="n">data</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">sort_values</span><span class="p">(</span><span class="n">by</span><span class="o">=</span><span class="s1">&#39;Population on the 1st of January, total&#39;</span><span class="p">,</span> <span class="n">ascending</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span><span class="o">.</span><span class="n">reset_index</span><span class="p">(</span><span class="n">drop</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-
-<span class="c1"># Rename the total population column</span>
-<span class="n">data</span><span class="o">.</span><span class="n">rename</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;Population on the 1st of January, total&#39;</span><span class="p">:</span><span class="s1">&#39;total_population&#39;</span><span class="p">},</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-
-<span class="c1"># Replace unicode characters due to rendering issue in Folium</span>
-<span class="n">data</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">to_replace</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;ü&#39;</span><span class="p">:</span><span class="s1">&#39;u&#39;</span><span class="p">,</span><span class="s1">&#39;ö&#39;</span><span class="p">:</span><span class="s1">&#39;o&#39;</span><span class="p">},</span> <span class="n">regex</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-
-<span class="c1"># Add ratings count per city to tidy data</span>
-<span class="n">data</span><span class="p">[</span><span class="s1">&#39;ratings_count&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">rating</span><span class="o">.</span><span class="n">notnull</span><span class="p">()</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;city&#39;</span><span class="p">])</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="s1">&#39;sum&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
-
-<span class="c1"># Add likes_count per city to tidy data</span>
-<span class="n">data</span><span class="p">[</span><span class="s1">&#39;likes_count&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">likes_cnt</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;city&#39;</span><span class="p">])</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="s1">&#39;sum&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
-
-<span class="c1"># Count ratings to distinct dataframe</span>
-<span class="n">data_counts</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">rating</span><span class="o">.</span><span class="n">notnull</span><span class="p">()</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;city&#39;</span><span class="p">],</span> <span class="n">sort</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span><span class="o">.</span><span class="n">reset_index</span><span class="p">())</span>
-<span class="n">data_counts</span> <span class="o">=</span> <span class="n">data_counts</span><span class="o">.</span><span class="n">merge</span><span class="p">(</span><span class="n">data</span><span class="p">[[</span><span class="s1">&#39;city&#39;</span><span class="p">,</span> <span class="s1">&#39;total_population&#39;</span><span class="p">]],</span> <span class="n">on</span><span class="o">=</span><span class="s1">&#39;city&#39;</span><span class="p">)</span> \
-                <span class="o">.</span><span class="n">drop_duplicates</span><span class="p">()</span> \
-                <span class="o">.</span><span class="n">reset_index</span><span class="p">(</span><span class="n">drop</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-<span class="n">data_counts</span><span class="o">.</span><span class="n">columns</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;city&#39;</span><span class="p">,</span> <span class="s1">&#39;ratings_count&#39;</span><span class="p">,</span> <span class="s1">&#39;total_population&#39;</span><span class="p">]</span>
-
-<span class="c1"># Count likes to distinct dataframe</span>
-<span class="n">likes_counts</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">likes_cnt</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;city&#39;</span><span class="p">],</span> <span class="n">sort</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span><span class="o">.</span><span class="n">reset_index</span><span class="p">())</span>
-<span class="n">likes_counts</span><span class="o">.</span><span class="n">columns</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;city&#39;</span><span class="p">,</span><span class="s1">&#39;likes_count&#39;</span><span class="p">]</span>
-<span class="n">data_counts</span> <span class="o">=</span> <span class="n">data_counts</span><span class="o">.</span><span class="n">merge</span><span class="p">(</span><span class="n">likes_counts</span><span class="p">,</span> <span class="n">on</span><span class="o">=</span><span class="s1">&#39;city&#39;</span><span class="p">)</span>
-
-<span class="c1"># Count number of biergartens per city</span>
-<span class="n">no_of_biergartens_city</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="s1">&#39;city&#39;</span><span class="p">,</span> <span class="n">sort</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span><span class="o">.</span><span class="n">count</span><span class="p">()</span><span class="o">.</span><span class="n">venue_id</span><span class="p">)</span><span class="o">.</span><span class="n">reset_index</span><span class="p">()</span>
-<span class="n">no_of_biergartens_city</span><span class="o">.</span><span class="n">columns</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;city&#39;</span><span class="p">,</span> <span class="s1">&#39;biergarten_count&#39;</span><span class="p">]</span>
-
-<span class="c1"># Join to count data</span>
-<span class="n">data_counts</span> <span class="o">=</span> <span class="n">data_counts</span><span class="o">.</span><span class="n">merge</span><span class="p">(</span><span class="n">no_of_biergartens_city</span><span class="p">,</span> <span class="n">on</span><span class="o">=</span><span class="s1">&#39;city&#39;</span><span class="p">)</span>
-
-<span class="c1"># Count no of biergartens per 100,000 people</span>
-<span class="n">data_counts</span><span class="p">[</span><span class="s1">&#39;biergarten_count_100k&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">data_counts</span><span class="p">[</span><span class="s1">&#39;biergarten_count&#39;</span><span class="p">]</span><span class="o">/</span><span class="n">data_counts</span><span class="p">[</span><span class="s1">&#39;total_population&#39;</span><span class="p">]</span><span class="o">*</span><span class="mi">100000</span>
-
-<span class="c1"># Add rank variables to dataset</span>
-<span class="n">data_counts</span><span class="p">[</span><span class="s1">&#39;biergarten_rank&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">data_counts</span><span class="p">[</span><span class="s1">&#39;biergarten_count&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">rank</span><span class="p">()</span>
-<span class="n">data_counts</span><span class="p">[</span><span class="s1">&#39;biergarten_100k_rank&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">data_counts</span><span class="p">[</span><span class="s1">&#39;biergarten_count_100k&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">rank</span><span class="p">()</span>
-</pre></div>
-
-    </div>
-</div>
-</div>
 
 </div>
 <div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[3]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="c1"># Get coordinates for Germany to center the map</span>
-<span class="n">geolocator</span> <span class="o">=</span> <span class="n">Nominatim</span><span class="p">(</span><span class="n">user_agent</span><span class="o">=</span><span class="s2">&quot;germany_explorer&quot;</span><span class="p">)</span>
-<span class="n">address</span> <span class="o">=</span> <span class="s1">&#39;Germany&#39;</span>
-<span class="n">location</span> <span class="o">=</span> <span class="n">geolocator</span><span class="o">.</span><span class="n">geocode</span><span class="p">(</span><span class="n">address</span><span class="p">)</span>
-<span class="n">germany_latitude</span> <span class="o">=</span> <span class="n">location</span><span class="o">.</span><span class="n">latitude</span>
-<span class="n">germany_longitude</span> <span class="o">=</span> <span class="n">location</span><span class="o">.</span><span class="n">longitude</span>
-
-<span class="c1"># Create empty dataframe to store coordinates to</span>
-<span class="n">germany_city_coordinates</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">()</span>
-
-<span class="c1"># Get coordinates for cities to be plotted</span>
-<span class="n">geolocator</span> <span class="o">=</span> <span class="n">Nominatim</span><span class="p">(</span><span class="n">user_agent</span><span class="o">=</span><span class="s2">&quot;germany_explorer&quot;</span><span class="p">)</span>
-<span class="k">for</span> <span class="n">city</span> <span class="ow">in</span> <span class="n">osm</span><span class="o">.</span><span class="n">top20_cities</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
-    <span class="n">address</span> <span class="o">=</span> <span class="n">city</span> <span class="o">+</span> <span class="s1">&#39;, Germany&#39;</span>
-    <span class="n">location</span> <span class="o">=</span> <span class="n">geolocator</span><span class="o">.</span><span class="n">geocode</span><span class="p">(</span><span class="n">address</span><span class="p">)</span>
-    <span class="n">d</span> <span class="o">=</span> <span class="p">{</span>
-    <span class="s1">&#39;city&#39;</span><span class="p">:</span> <span class="n">city</span><span class="p">,</span>
-    <span class="s1">&#39;latitude&#39;</span><span class="p">:</span> <span class="n">location</span><span class="o">.</span><span class="n">latitude</span><span class="p">,</span>
-    <span class="s1">&#39;longitude&#39;</span><span class="p">:</span> <span class="n">location</span><span class="o">.</span><span class="n">longitude</span><span class="p">,</span>
-    <span class="p">}</span>
-    <span class="n">germany_city_coordinates</span> <span class="o">=</span> <span class="n">germany_city_coordinates</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">d</span><span class="p">,</span> <span class="n">ignore_index</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-    
-<span class="c1"># Replace unicode characters due to rendering issue in Folium and to match rest of the data</span>
-<span class="n">germany_city_coordinates</span> <span class="o">=</span> <span class="n">germany_city_coordinates</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">to_replace</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;ü&#39;</span><span class="p">:</span><span class="s1">&#39;u&#39;</span><span class="p">,</span><span class="s1">&#39;ö&#39;</span><span class="p">:</span><span class="s1">&#39;o&#39;</span><span class="p">},</span> <span class="n">regex</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-
-<span class="c1"># Join coordinates to counts data</span>
-<span class="n">data_counts</span> <span class="o">=</span> <span class="n">data_counts</span><span class="o">.</span><span class="n">merge</span><span class="p">(</span><span class="n">germany_city_coordinates</span><span class="p">,</span> <span class="n">on</span><span class="o">=</span><span class="s1">&#39;city&#39;</span><span class="p">)</span>
-
-<span class="c1"># Join coordinates to venue data</span>
-<span class="n">data</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">merge</span><span class="p">(</span><span class="n">germany_city_coordinates</span><span class="p">,</span> <span class="n">on</span><span class="o">=</span><span class="s1">&#39;city&#39;</span><span class="p">)</span>
-</pre></div>
-
-    </div>
-</div>
-</div>
 
 </div>
 <div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[4]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="c1"># Inititate map of Germany</span>
-<span class="n">map_germany</span> <span class="o">=</span> <span class="n">folium</span><span class="o">.</span><span class="n">Map</span><span class="p">(</span><span class="n">location</span><span class="o">=</span><span class="p">[</span><span class="n">germany_latitude</span><span class="p">,</span> <span class="n">germany_longitude</span><span class="p">],</span> <span class="n">zoom_start</span><span class="o">=</span><span class="mi">6</span><span class="p">)</span>
-
-<span class="c1"># Loop through data_counts</span>
-<span class="k">for</span> <span class="n">city</span><span class="p">,</span> <span class="n">lat</span><span class="p">,</span> <span class="n">lng</span><span class="p">,</span> <span class="n">pop</span><span class="p">,</span> <span class="n">cnt</span><span class="p">,</span> <span class="n">cnt_100k</span><span class="p">,</span> <span class="n">rank</span><span class="p">,</span> <span class="n">rank_100k</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">data_counts</span><span class="p">[</span><span class="s1">&#39;city&#39;</span><span class="p">]</span>
-                          <span class="p">,</span> <span class="n">data_counts</span><span class="p">[</span><span class="s1">&#39;latitude&#39;</span><span class="p">]</span>
-                          <span class="p">,</span> <span class="n">data_counts</span><span class="p">[</span><span class="s1">&#39;longitude&#39;</span><span class="p">]</span>
-                          <span class="p">,</span> <span class="n">data_counts</span><span class="p">[</span><span class="s1">&#39;total_population&#39;</span><span class="p">]</span>
-                          <span class="p">,</span> <span class="n">data_counts</span><span class="p">[</span><span class="s1">&#39;biergarten_count&#39;</span><span class="p">]</span>
-                          <span class="p">,</span> <span class="n">data_counts</span><span class="p">[</span><span class="s1">&#39;biergarten_count_100k&#39;</span><span class="p">]</span>
-                          <span class="p">,</span> <span class="n">data_counts</span><span class="p">[</span><span class="s1">&#39;biergarten_rank&#39;</span><span class="p">]</span>
-                          <span class="p">,</span> <span class="n">data_counts</span><span class="p">[</span><span class="s1">&#39;biergarten_100k_rank&#39;</span><span class="p">]):</span>
-    
-    <span class="c1"># Generate html to include data in popup</span>
-    <span class="n">label</span> <span class="o">=</span> <span class="p">(</span>
-            <span class="s2">&quot;</span><span class="si">{city}</span><span class="s2">&lt;br&gt;&quot;</span>
-            <span class="s2">&quot;Population: </span><span class="si">{pop}</span><span class="s2">&lt;br&gt;&quot;</span>
-            <span class="s2">&quot;No of biergartens: </span><span class="si">{cnt}</span><span class="s2">&lt;br&gt;&quot;</span>
-            <span class="s2">&quot;No of biergartens per 100,000 people: </span><span class="si">{cnt_100k}</span><span class="s2">&lt;br&gt;&quot;</span>
-           <span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">city</span><span class="o">=</span><span class="n">city</span><span class="o">.</span><span class="n">upper</span><span class="p">(),</span>
-                    <span class="n">pop</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">pop</span><span class="p">)),</span>
-                    <span class="n">cnt</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">cnt</span><span class="p">)),</span>
-                    <span class="n">cnt_100k</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="nb">round</span><span class="p">(</span><span class="n">cnt_100k</span><span class="p">,</span> <span class="mi">1</span><span class="p">)),</span>
-                    <span class="p">)</span>
-    
-    <span class="c1"># Set marker color based on the biergarten_count_100k</span>
-    <span class="k">if</span> <span class="n">cnt_100k</span> <span class="o">&gt;</span> <span class="mi">5</span><span class="p">:</span>
-        <span class="n">colour</span> <span class="o">=</span> <span class="s1">&#39;darkpurple&#39;</span>
-    <span class="k">elif</span> <span class="n">cnt_100k</span> <span class="o">&gt;</span> <span class="mi">4</span><span class="p">:</span>
-        <span class="n">colour</span> <span class="o">=</span> <span class="s1">&#39;red&#39;</span>
-    <span class="k">elif</span> <span class="n">cnt_100k</span> <span class="o">&gt;</span> <span class="mi">3</span><span class="p">:</span>
-        <span class="n">colour</span> <span class="o">=</span> <span class="s1">&#39;orange&#39;</span>
-    <span class="k">elif</span> <span class="n">cnt_100k</span> <span class="o">&gt;</span> <span class="mi">2</span><span class="p">:</span>
-        <span class="n">colour</span> <span class="o">=</span> <span class="s1">&#39;pink&#39;</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="n">colour</span> <span class="o">=</span> <span class="s1">&#39;lightgray&#39;</span>
-    
-    <span class="c1"># Add marker</span>
-    <span class="n">map_germany</span><span class="o">.</span><span class="n">add_child</span><span class="p">(</span><span class="n">folium</span><span class="o">.</span><span class="n">Marker</span><span class="p">(</span>
-        <span class="n">location</span><span class="o">=</span><span class="p">[</span><span class="n">lat</span><span class="p">,</span> <span class="n">lng</span><span class="p">],</span>
-        <span class="n">popup</span><span class="o">=</span><span class="n">label</span><span class="p">,</span>
-        <span class="n">icon</span><span class="o">=</span><span class="n">folium</span><span class="o">.</span><span class="n">Icon</span><span class="p">(</span>
-            <span class="n">color</span><span class="o">=</span><span class="n">colour</span><span class="p">,</span>
-            <span class="n">prefix</span><span class="o">=</span><span class="s1">&#39;fa&#39;</span><span class="p">,</span>
-            <span class="n">icon</span><span class="o">=</span><span class="s1">&#39;circle&#39;</span><span class="p">)))</span>
-
-<span class="c1"># Create a legent to map</span>
-<span class="n">legend_html</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
-<span class="s2">     &lt;div style=&quot;position: fixed; bottom: 50px; left: 50px; width: 150px; height: 200px; </span><span class="se">\</span>
-<span class="s2">     border:2px solid grey; z-index:9999; font-size:14px;&quot; &gt;</span>
-<span class="s2">     &amp;nbsp; No of biergartens &lt;br&gt;</span>
-<span class="s2">     &amp;nbsp; per 100,000 people &lt;br&gt;</span>
-<span class="s2">     &amp;nbsp; 5 + &amp;nbsp; &lt;i class=&quot;fa fa-map-marker fa-2x&quot;</span>
-<span class="s2">                  style=&quot;color:darkpurple&quot;&gt;&lt;/i&gt;&lt;br&gt;</span>
-<span class="s2">     &amp;nbsp; 4-5 &amp;nbsp; &lt;i class=&quot;fa fa-map-marker fa-2x&quot;</span>
-<span class="s2">                  style=&quot;color:red&quot;&gt;&lt;/i&gt;&lt;br&gt;</span>
-<span class="s2">     &amp;nbsp; 3-4 &amp;nbsp; &lt;i class=&quot;fa fa-map-marker fa-2x&quot;</span>
-<span class="s2">                  style=&quot;color:orange&quot;&gt;&lt;/i&gt;&lt;br&gt;</span>
-<span class="s2">     &amp;nbsp; 2-3 &amp;nbsp; &lt;i class=&quot;fa fa-map-marker fa-2x&quot;</span>
-<span class="s2">                  style=&quot;color:pink&quot;&gt;&lt;/i&gt;&lt;br&gt;</span>
-<span class="s2">     &amp;nbsp; 0-2 &amp;nbsp; &lt;i class=&quot;fa fa-map-marker fa-2x&quot;</span>
-<span class="s2">                  style=&quot;color:lightgray&quot;&gt;&lt;/i&gt;&lt;/div&gt;</span>
-<span class="s2">     &quot;&quot;&quot;</span>
-<span class="n">map_germany</span><span class="o">.</span><span class="n">get_root</span><span class="p">()</span><span class="o">.</span><span class="n">html</span><span class="o">.</span><span class="n">add_child</span><span class="p">(</span><span class="n">folium</span><span class="o">.</span><span class="n">Element</span><span class="p">(</span><span class="n">legend_html</span><span class="p">))</span>
-    
-<span class="c1"># Show the map</span>
-<span class="n">map_germany</span>
-</pre></div>
-
-    </div>
-</div>
-</div>
 
 <div class="output_wrapper">
 <div class="output">
 
-
 <div class="output_area">
-
-    <div class="prompt output_prompt">Out[4]:</div>
-
 
 
 <div class="output_html rendered_html output_subarea output_execute_result">
